@@ -1,0 +1,144 @@
+FUNCTION_BLOCK FrenagemControl
+
+    VAR_INPUT
+        Velocidade :   REAL;
+        Distancia :   REAL;
+        Condicao_Estrada :   REAL;
+        Peso_Veiculo :   REAL;
+        Tempo : REAL;
+    END_VAR
+
+    VAR_OUTPUT
+        Frenagem :   REAL;
+    END_VAR
+
+    FUZZIFY Distancia
+        TERM Muito_Proximo := (0,1) (5,0);
+        TERM Proximo := (5,1) (10,0);
+        TERM Medio := (10,1) (30,0);
+        TERM Longe := (30,1) (50,0);
+        TERM Muito_Longe := (50,1) (100,0);
+    END_FUZZIFY
+
+    FUZZIFY Velocidade
+        TERM Muito_Lenta := (0,1) (10,0);
+        TERM Lenta := (10,0) (30,1) (50,0);
+        TERM Medio := (30,0) (80,1) (120,0);
+        TERM Rapida := (80,0) (120,1) (150,0);
+        TERM Muito_Rapida := (120,0) (200,1);
+    END_FUZZIFY
+
+    FUZZIFY Condicao_Estrada
+        TERM Muito_Boa := (0.75,1) (1,0);
+        TERM Boa := (0.5,1) (0.75,0);
+        TERM Regular := (0.25,1) (0.5,0);
+        TERM Ruim := (0,1) (0.25,0);
+        TERM Muito_Ruim := (0,0);
+    END_FUZZIFY
+
+    FUZZIFY Peso_Veiculo
+        TERM Muito_Leve := (0,0) (1000,1);
+        TERM Leve := (1000,0) (1500,1);
+        TERM Medio := (1500,0) (2000,1);
+        TERM Pesado := (2000,0) (2500,1);
+        TERM Muito_Pesado := (2500,0) (3000,1);
+    END_FUZZIFY
+
+    FUZZIFY Tempo
+        TERM Limpo := (0,1) (1,0);
+        TERM Nublado := (1,1) (3,0);
+        TERM Chuva_Leve := (4,1) (6,0);
+        TERM Chuva_Pesada := (7,1) (9,0);
+        TERM Neve := (10,1) (15,0);
+    END_FUZZIFY
+
+    DEFUZZIFY Frenagem
+        TERM Muito_Forte := (0,0) (25,1);
+        TERM Forte := (25,0) (50,1);
+        TERM Medio := (50,0) (75,1);
+        TERM Fraca := (75,0) (100,1);
+        TERM Muito_Fraca := (100,0);
+    END_DEFUZZIFY
+
+RULEBLOCK Rules
+    AND:MIN;
+
+    /* 5 ^ 5 = 3125 regras */
+
+    RULE 1 : IF Velocidade IS Lenta AND Distancia IS Longe AND Tempo IS Limpo THEN Frenagem IS Muito_Fraca;
+    RULE 2 : IF Velocidade IS Lenta AND Distancia IS Medio AND Tempo IS Limpo THEN Frenagem IS Fraca;
+    RULE 3 : IF Velocidade IS Lenta AND Distancia IS Proximo AND Tempo IS Limpo THEN Frenagem IS Medio;
+
+    RULE 4 : IF Velocidade IS Medio AND Distancia IS Longe AND Tempo IS Limpo THEN Frenagem IS Fraca;
+    RULE 5 : IF Velocidade IS Medio AND Distancia IS Medio AND Tempo IS Limpo THEN Frenagem IS Medio;
+    RULE 6 : IF Velocidade IS Medio AND Distancia IS Proximo AND Tempo IS Limpo THEN Frenagem IS Forte;
+
+    RULE 7 : IF Velocidade IS Rapida AND Distancia IS Longe AND Tempo IS Limpo THEN Frenagem IS Forte;
+    RULE 8 : IF Velocidade IS Rapida AND Distancia IS Medio AND Tempo IS Limpo THEN Frenagem IS Muito_Forte;
+    RULE 9 : IF Velocidade IS Rapida AND Distancia IS Proximo AND Tempo IS Limpo THEN Frenagem IS Muito_Forte;
+
+    RULE 10 : IF Velocidade IS Lenta AND Condicao_Estrada IS Boa AND Tempo IS Limpo THEN Frenagem IS Fraca;
+    RULE 11 : IF Velocidade IS Lenta AND Condicao_Estrada IS Regular AND Tempo IS Limpo THEN Frenagem IS Medio;
+    RULE 12 : IF Velocidade IS Lenta AND Condicao_Estrada IS Ruim AND Tempo IS Limpo THEN Frenagem IS Forte;
+
+    RULE 13 : IF Velocidade IS Medio AND Condicao_Estrada IS Boa AND Tempo IS Limpo THEN Frenagem IS Fraca;
+    RULE 14 : IF Velocidade IS Medio AND Condicao_Estrada IS Regular AND Tempo IS Limpo THEN Frenagem IS Medio;
+    RULE 15 : IF Velocidade IS Medio AND Condicao_Estrada IS Ruim AND Tempo IS Limpo THEN Frenagem IS Forte;
+
+    RULE 16 : IF Velocidade IS Rapida AND Condicao_Estrada IS Boa AND Tempo IS Limpo THEN Frenagem IS Medio;
+    RULE 17 : IF Velocidade IS Rapida AND Condicao_Estrada IS Regular AND Tempo IS Limpo THEN Frenagem IS Muito_Forte;
+    RULE 18 : IF Velocidade IS Rapida AND Condicao_Estrada IS Ruim AND Tempo IS Limpo THEN Frenagem IS Muito_Forte;
+
+    RULE 19 : IF Velocidade IS Lenta AND Peso_Veiculo IS Leve AND Tempo IS Limpo THEN Frenagem IS Muito_Fraca;
+    RULE 20 : IF Velocidade IS Lenta AND Peso_Veiculo IS Medio AND Tempo IS Limpo THEN Frenagem IS Fraca;
+    RULE 21 : IF Velocidade IS Lenta AND Peso_Veiculo IS Pesado AND Tempo IS Limpo THEN Frenagem IS Medio;
+
+    RULE 22 : IF Velocidade IS Medio AND Peso_Veiculo IS Leve AND Tempo IS Limpo THEN Frenagem IS Fraca;
+    RULE 23 : IF Velocidade IS Medio AND Peso_Veiculo IS Medio AND Tempo IS Limpo THEN Frenagem IS Medio;
+    RULE 24 : IF Velocidade IS Medio AND Peso_Veiculo IS Pesado AND Tempo IS Limpo THEN Frenagem IS Forte;
+
+    RULE 25 : IF Velocidade IS Rapida AND Peso_Veiculo IS Leve AND Tempo IS Limpo THEN Frenagem IS Forte;
+    RULE 26 : IF Velocidade IS Rapida AND Peso_Veiculo IS Medio AND Tempo IS Limpo THEN Frenagem IS Muito_Forte;
+    RULE 27 : IF Velocidade IS Rapida AND Peso_Veiculo IS Pesado AND Tempo IS Limpo THEN Frenagem IS Muito_Forte;
+
+    RULE 28 : IF Velocidade IS Lenta AND Tempo IS Nublado THEN Frenagem IS Fraca;
+    RULE 29 : IF Velocidade IS Lenta AND Tempo IS Chuva_Leve THEN Frenagem IS Medio;
+    RULE 30 : IF Velocidade IS Lenta AND Tempo IS Chuva_Pesada THEN Frenagem IS Forte;
+    RULE 31 : IF Velocidade IS Lenta AND Tempo IS Neve THEN Frenagem IS Forte;
+
+    RULE 32 : IF Velocidade IS Medio AND Tempo IS Nublado THEN Frenagem IS Medio;
+    RULE 33 : IF Velocidade IS Medio AND Tempo IS Chuva_Leve THEN Frenagem IS Forte;
+    RULE 34 : IF Velocidade IS Medio AND Tempo IS Chuva_Pesada THEN Frenagem IS Muito_Forte;
+    RULE 35 : IF Velocidade IS Medio AND Tempo IS Neve THEN Frenagem IS Muito_Forte;
+
+    RULE 36 : IF Velocidade IS Rapida AND Tempo IS Nublado THEN Frenagem IS Forte;
+    RULE 37 : IF Velocidade IS Rapida AND Tempo IS Chuva_Leve THEN Frenagem IS Muito_Forte;
+    RULE 38 : IF Velocidade IS Rapida AND Tempo IS Chuva_Pesada THEN Frenagem IS Muito_Forte;
+    RULE 39 : IF Velocidade IS Rapida AND Tempo IS Neve THEN Frenagem IS Muito_Forte;
+
+    RULE 40 : IF Distancia IS Longe AND Condicao_Estrada IS Boa AND Tempo IS Limpo THEN Frenagem IS Fraca;
+    RULE 41 : IF Distancia IS Longe AND Condicao_Estrada IS Regular AND Tempo IS Limpo THEN Frenagem IS Medio;
+    RULE 42 : IF Distancia IS Longe AND Condicao_Estrada IS Ruim AND Tempo IS Limpo THEN Frenagem IS Forte;
+
+    RULE 43 : IF Distancia IS Medio AND Condicao_Estrada IS Boa AND Tempo IS Limpo THEN Frenagem IS Fraca;
+    RULE 44 : IF Distancia IS Medio AND Condicao_Estrada IS Regular AND Tempo IS Limpo THEN Frenagem IS Medio;
+    RULE 45 : IF Distancia IS Medio AND Condicao_Estrada IS Ruim AND Tempo IS Limpo THEN Frenagem IS Forte;
+
+    RULE 46 : IF Distancia IS Proximo AND Condicao_Estrada IS Boa AND Tempo IS Limpo THEN Frenagem IS Medio;
+    RULE 47 : IF Distancia IS Proximo AND Condicao_Estrada IS Regular AND Tempo IS Limpo THEN Frenagem IS Forte;
+    RULE 48 : IF Distancia IS Proximo AND Condicao_Estrada IS Ruim AND Tempo IS Limpo THEN Frenagem IS Muito_Forte;
+
+    RULE 49 : IF Distancia IS Muito_Proximo AND Condicao_Estrada IS Boa AND Tempo IS Limpo THEN Frenagem IS Fraca;
+    RULE 50 : IF Distancia IS Muito_Proximo AND Condicao_Estrada IS Regular AND Tempo IS Limpo THEN Frenagem IS Medio;
+    RULE 51 : IF Distancia IS Muito_Proximo AND Condicao_Estrada IS Ruim AND Tempo IS Limpo THEN Frenagem IS Forte;
+
+    RULE 52 : IF Velocidade IS Lenta AND Condicao_Estrada IS Boa AND Tempo IS Nublado THEN Frenagem IS Fraca;
+    RULE 53 : IF Velocidade IS Medio AND Condicao_Estrada IS Boa AND Tempo IS Nublado THEN Frenagem IS Medio;
+    RULE 54 : IF Velocidade IS Rapida AND Condicao_Estrada IS Boa AND Tempo IS Nublado THEN Frenagem IS Forte;
+
+    RULE 55 : IF Velocidade IS Lenta AND Condicao_Estrada IS Ruim AND Tempo IS Nublado THEN Frenagem IS Medio;
+    RULE 56 : IF Velocidade IS Medio AND Condicao_Estrada IS Ruim AND Tempo IS Nublado THEN Frenagem IS Muito_Forte;
+    RULE 57 : IF Velocidade IS Rapida AND Condicao_Estrada IS Ruim AND Tempo IS Nublado THEN Frenagem IS Muito_Forte;
+
+END_RULEBLOCK
+END_FUNCTION_BLOCK
